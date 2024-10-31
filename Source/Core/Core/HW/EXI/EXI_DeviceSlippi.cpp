@@ -1459,7 +1459,7 @@ bool CEXISlippi::shouldAdvanceOnlineFrame(s32 frame)
           std::min(-offset_us / (speed_up_frame_window * 16683.0f), 1.0f);
       deviation = frame_window_multiplier * max_speed_up_amount;
     }
-    else
+    else if (offset_us > 0)
     {
       // Here we are ahead, so let's slow down our instance
       float frame_window_multiplier =
@@ -1571,10 +1571,10 @@ void CEXISlippi::prepareOpponentInputs(s32 frame, bool should_skip)
   {
     frame_result = 3;  // Indicates we have disconnected
   }
-  else if (shouldAdvanceOnlineFrame(frame))
-  {
-    frame_result = 4;
-  }
+  // else if (shouldAdvanceOnlineFrame(frame))
+  // {
+  //   frame_result = 4;
+  // }
 
   m_read_queue.push_back(frame_result);  // Write out the control message value
 
