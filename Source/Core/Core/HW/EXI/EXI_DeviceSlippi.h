@@ -211,7 +211,7 @@ private:
   void setMatchSelections(u8* payload);
   bool shouldSkipOnlineFrame(s32 frame, s32 finalized_frame);
   bool shouldAdvanceOnlineFrame(s32 frame);
-  bool isFacingBots();
+  bool opponentRunahead();
   void handleLogInRequest();
   void handleLogOutRequest();
   void prepareOnlineStatus();

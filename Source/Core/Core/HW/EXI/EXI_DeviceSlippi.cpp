@@ -1423,6 +1423,9 @@ bool CEXISlippi::shouldSkipOnlineFrame(s32 frame, s32 finalized_frame)
 
 bool CEXISlippi::shouldAdvanceOnlineFrame(s32 frame)
 {
+  if (opponentRunahead())
+     return false;
+
   // Logic below is used to test frame advance by forcing it more often
   // SConfig::GetInstance().m_EmulationSpeed = 0.5f;
   // if (frame > 120 && frame % 10 < 3)
@@ -1556,11 +1559,24 @@ void CEXISlippi::handleSendInputs(s32 frame, u8 delay, s32 checksum_frame, u32 c
   slippi_netplay->SendSlippiPad(std::move(pad));
 }
 
-bool CEXISlippi::isFacingBots()
+bool CEXISlippi::opponentRunahead()
 {
+  // Bot players might be running ahead to "donate" their delay frames to us.
+
+  // Only registered bot accounts are allowed to do this.
+  auto player_info = matchmaking->GetPlayerInfo();
+  for (int i = 0; i < player_info.size(); i++)
+  {
+    if (i == matchmaking->LocalPlayerIndex())
+      continue;
+
+    if (!player_info[i].is_bot)
+      return false;
+  }
+
+  // Now check whether the bot is actually using runahead.
   u8 remote_player_count = matchmaking->RemotePlayerCount();
 
-  // If the opponent is using the bot build, they will be running ahead of us.
   for (int i = 0; i < remote_player_count; i++)
   {
     if (slippi_netplay->m_remote_dolphin_type[i] != SlippiNetplayClient::DolphinType::BOT)
@@ -1588,7 +1604,7 @@ void CEXISlippi::prepareOpponentInputs(s32 frame, bool should_skip)
   {
     frame_result = 3;  // Indicates we have disconnected
   }
-  else if (!isFacingBots() && shouldAdvanceOnlineFrame(frame))
+  else if (shouldAdvanceOnlineFrame(frame))
   {
     frame_result = 4;
   }
