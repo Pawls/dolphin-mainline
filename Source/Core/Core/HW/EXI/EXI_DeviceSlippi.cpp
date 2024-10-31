@@ -1556,6 +1556,19 @@ void CEXISlippi::handleSendInputs(s32 frame, u8 delay, s32 checksum_frame, u32 c
   slippi_netplay->SendSlippiPad(std::move(pad));
 }
 
+bool CEXISlippi::isFacingBots()
+{
+  u8 remote_player_count = matchmaking->RemotePlayerCount();
+
+  // If the opponent is using the bot build, they will be running ahead of us.
+  for (int i = 0; i < remote_player_count; i++)
+  {
+    if (slippi_netplay->m_remote_dolphin_type[i] != SlippiNetplayClient::DolphinType::BOT)
+      return false;
+  }
+  return true;
+}
+
 void CEXISlippi::prepareOpponentInputs(s32 frame, bool should_skip)
 {
   m_read_queue.clear();
@@ -1575,10 +1588,10 @@ void CEXISlippi::prepareOpponentInputs(s32 frame, bool should_skip)
   {
     frame_result = 3;  // Indicates we have disconnected
   }
-  // else if (shouldAdvanceOnlineFrame(frame))
-  // {
-  //   frame_result = 4;
-  // }
+  else if (!isFacingBots() && shouldAdvanceOnlineFrame(frame))
+  {
+    frame_result = 4;
+  }
 
   m_read_queue.push_back(frame_result);  // Write out the control message value
 
