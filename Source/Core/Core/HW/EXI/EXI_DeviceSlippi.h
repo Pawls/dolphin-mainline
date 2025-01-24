@@ -220,6 +220,7 @@ private:
   bool shouldSkipOnlineFrame(s32 frame, s32 finalized_frame);
   bool shouldAdvanceOnlineFrame(s32 frame);
   bool opponentRunahead();
+  bool shouldRunAhead();
   void handleLogInRequest();
   void handleLogOutRequest();
   void prepareOnlineStatus();
