@@ -37,7 +37,7 @@
 
 #include "VideoCommon/VideoBackendBase.h"
 
-static std::unique_ptr<Platform> s_platform;
+std::unique_ptr<Platform> g_platform;
 
 static void signal_handler(int)
 {
@@ -50,7 +50,7 @@ static void signal_handler(int)
   }
 #endif
 
-  s_platform->RequestShutdown();
+  g_platform->RequestShutdown();
 }
 
 std::vector<std::string> Host_GetPreferredLocales()
@@ -79,12 +79,12 @@ static Common::Event s_update_main_frame_event;
 void Host_Message(HostMessageID id)
 {
   if (id == HostMessageID::WMUserStop)
-    s_platform->Stop();
+    g_platform->Stop();
 }
 
 void Host_UpdateTitle(const std::string& title)
 {
-  s_platform->SetTitle(title);
+  g_platform->SetTitle(title);
 }
 
 void Host_UpdateDisasmDialog()
@@ -110,7 +110,7 @@ void Host_RequestRenderWindowSize(int width, int height)
 
 bool Host_RendererHasFocus()
 {
-  return s_platform->IsWindowFocused();
+  return g_platform->IsWindowFocused();
 }
 
 bool Host_RendererHasFullFocus()
@@ -121,7 +121,7 @@ bool Host_RendererHasFullFocus()
 
 bool Host_RendererIsFullscreen()
 {
-  return s_platform->IsWindowFullscreen();
+  return g_platform->IsWindowFullscreen();
 }
 
 bool Host_TASInputHasFocus()
@@ -291,14 +291,14 @@ int main(int argc, char* argv[])
   if (options.is_set("user"))
     user_directory = static_cast<const char*>(options.get("user"));
 
-  s_platform = GetPlatform(options);
-  if (!s_platform || !s_platform->Init())
+  g_platform = GetPlatform(options);
+  if (!g_platform || !g_platform->Init())
   {
     fprintf(stderr, "No platform found, or failed to initialize.\n");
     return 1;
   }
 
-  const WindowSystemInfo wsi = s_platform->GetWindowSystemInfo();
+  const WindowSystemInfo wsi = g_platform->GetWindowSystemInfo();
 
   UICommon::SetUserDirectory(user_directory);
   UICommon::Init();
@@ -330,7 +330,7 @@ int main(int argc, char* argv[])
 
   Core::AddOnStateChangedCallback([](Core::State state) {
     if (state == Core::State::Uninitialized)
-      s_platform->Stop();
+      g_platform->Stop();
   });
 
 #ifdef _WIN32
@@ -358,11 +358,11 @@ int main(int argc, char* argv[])
   Discord::UpdateDiscordPresence();
 #endif
 
-  s_platform->MainLoop();
+  g_platform->MainLoop();
   Core::Stop(Core::System::GetInstance());
 
   Core::Shutdown(Core::System::GetInstance());
-  s_platform.reset();
+  g_platform.reset();
 
   return 0;
 }

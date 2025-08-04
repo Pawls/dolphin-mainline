@@ -23,6 +23,7 @@
 #include "Core/CoreTiming.h"
 #include "Core/Debugger/Debugger_SymbolMap.h"
 #include "Core/GeckoCode.h"
+#include "Core/HW/CPU.h"
 #include "Core/HW/EXI/EXI_DeviceSlippi.h"
 #include "Core/HW/Memmap.h"
 #include "Core/HW/SystemTimers.h"
@@ -30,6 +31,9 @@
 #include "Core/NetPlayClient.h"
 #include "Core/PowerPC/PowerPC.h"
 #include "Core/Slippi/SlippiMatchmaking.h"
+
+// To shutdown dolphin after we're out of replays.
+#include "DolphinNoGUI/Platform.h"
 
 // SlippiTODO: should we remove this import for netplay build?? ifdef?
 #include "Core/Slippi/SlippiPlayback.h"
@@ -46,6 +50,8 @@
 #define FRAME_INTERVAL 900
 #define SLEEP_TIME_MS 8
 #define WRITE_FILE_SLEEP_TIME_MS 85
+
+extern std::unique_ptr<Platform> g_platform;
 
 // #define LOCAL_TESTING
 // #define CREATE_DIFF_FILES
@@ -1217,6 +1223,12 @@ void CEXISlippi::prepareIsFileReady()
   auto is_new_replay = g_replay_comm->isNewReplay();
   if (!is_new_replay)
   {
+    if (file_write_queue.Empty())
+    {
+      g_platform->RequestShutdown();
+      return;
+    }
+
     g_replay_comm->nextReplay();
     m_read_queue.push_back(0);
     return;
