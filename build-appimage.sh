@@ -53,11 +53,17 @@ rm -rf ./AppDir/
 mkdir -p ${APPDIR_HOOKS}
 cp Data/linux-env.sh ${APPDIR_HOOKS}
 
+BUILD_DIR="./build-nogui"
+if [ "$1" == "playback" ]
+then
+		BUILD_DIR+="-playback"
+fi
+
 # Build the AppDir directory for this image
 mkdir -p AppDir
 ./Tools/linuxdeploy \
 	--appdir=./AppDir \
-	-e ./build-headless/Binaries/dolphin-emu \
+	-e $BUILD_DIR/Binaries/dolphin-emu \
 	-d ./Data/slippi-dolphin.desktop \
 	-i ./Data/dolphin-emu.png
 
