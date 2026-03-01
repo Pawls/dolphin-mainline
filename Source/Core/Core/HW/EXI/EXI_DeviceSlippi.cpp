@@ -3249,8 +3249,9 @@ void CEXISlippi::DMAWrite(u32 _uAddr, u32 _uSize)
     g_need_input_for_frame = true;
     SlippiSpectateServer::getInstance().startGame();
     SlippiSpectateServer::getInstance().write(&mem_ptr[0], receive_commands_len + 1);
-    slprs_exi_device_reporter_push_replay_data(slprs_exi_device_ptr, &mem_ptr[0],
-                                               receive_commands_len + 1);
+    if (slippi_netplay)
+      slprs_exi_device_reporter_push_replay_data(slprs_exi_device_ptr, &mem_ptr[0],
+                                                 receive_commands_len + 1);
   }
 
   if (byte == CMD_MENU_FRAME)
@@ -3285,8 +3286,9 @@ void CEXISlippi::DMAWrite(u32 _uAddr, u32 _uSize)
       writeToFileAsync(&mem_ptr[buf_loc], payload_len + 1, "close");
       SlippiSpectateServer::getInstance().write(&mem_ptr[buf_loc], payload_len + 1);
       SlippiSpectateServer::getInstance().endGame();
-      slprs_exi_device_reporter_push_replay_data(slprs_exi_device_ptr, &mem_ptr[buf_loc],
-                                                 payload_len + 1);
+      if (slippi_netplay)
+        slprs_exi_device_reporter_push_replay_data(slprs_exi_device_ptr, &mem_ptr[buf_loc],
+                                                   payload_len + 1);
       break;
     case CMD_PREPARE_REPLAY:
       prepareGameInfo(&mem_ptr[buf_loc + 1]);
@@ -3298,8 +3300,9 @@ void CEXISlippi::DMAWrite(u32 _uAddr, u32 _uSize)
       g_need_input_for_frame = true;
       writeToFileAsync(&mem_ptr[buf_loc], payload_len + 1, "");
       SlippiSpectateServer::getInstance().write(&mem_ptr[buf_loc], payload_len + 1);
-      slprs_exi_device_reporter_push_replay_data(slprs_exi_device_ptr, &mem_ptr[buf_loc],
-                                                 payload_len + 1);
+      if (slippi_netplay)
+        slprs_exi_device_reporter_push_replay_data(slprs_exi_device_ptr, &mem_ptr[buf_loc],
+                                                   payload_len + 1);
       break;
     case CMD_IS_STOCK_STEAL:
       prepareIsStockSteal(&mem_ptr[buf_loc + 1]);
@@ -3436,8 +3439,9 @@ void CEXISlippi::DMAWrite(u32 _uAddr, u32 _uSize)
     default:
       writeToFileAsync(&mem_ptr[buf_loc], payload_len + 1, "");
       SlippiSpectateServer::getInstance().write(&mem_ptr[buf_loc], payload_len + 1);
-      slprs_exi_device_reporter_push_replay_data(slprs_exi_device_ptr, &mem_ptr[buf_loc],
-                                                 payload_len + 1);
+      if (slippi_netplay)
+        slprs_exi_device_reporter_push_replay_data(slprs_exi_device_ptr, &mem_ptr[buf_loc],
+                                                   payload_len + 1);
       break;
     }
 
