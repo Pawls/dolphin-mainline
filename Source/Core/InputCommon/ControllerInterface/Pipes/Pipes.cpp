@@ -134,9 +134,9 @@ PipeDevice::~PipeDevice()
 s32 PipeDevice::readFromPipe(PIPE_FD file_descriptor, char* in_buffer, size_t size)
 {
 #ifdef _WIN32
-
   u32 bytes_available = 0;
   DWORD bytesread = 0;
+
   bool peek_success =
       PeekNamedPipe(file_descriptor, NULL, 0, NULL, (LPDWORD)&bytes_available, NULL);
 
@@ -155,11 +155,11 @@ s32 PipeDevice::readFromPipe(PIPE_FD file_descriptor, char* in_buffer, size_t si
                             &bytesread,                                   // number of bytes read
                             NULL);                                        // not overlapped
     if (!success)
-    {
       return -1;
-    }
+    return (s32)bytesread;
   }
-  return (s32)bytesread;
+
+  return 0;  // Return 0 if no data, to avoid triggering error logic elsewhere
 #else
   return read(file_descriptor, in_buffer, size);
 #endif
@@ -172,10 +172,18 @@ void waitForInput(PIPE_FD file_descriptor)
   while (true)
   {
     DWORD bytes_available = 0;
-    if (PeekNamedPipe(file_descriptor, NULL, 0, NULL, &bytes_available, NULL) &&
-        bytes_available > 0)
+    BOOL success = PeekNamedPipe(file_descriptor, NULL, 0, NULL, &bytes_available, NULL);
+    if (!success)
+    {
+      // Pipe has no connected client — don't block forever.
+      // Reconnect for next time and return immediately.
+      DisconnectNamedPipe(file_descriptor);
+      ConnectNamedPipe(file_descriptor, NULL);
       break;
-    Sleep(1);  // yield to avoid busy-loop
+    }
+    if (bytes_available > 0)
+      break;
+    Sleep(1);
   }
 #else
   fd_set set;
@@ -199,7 +207,7 @@ Core::DeviceRemoval PipeDevice::UpdateInput()
     if (wait_for_input)
       waitForInput(m_fd);
 
-    // Fill buffer with whatever data is present.
+    bool got_data = false;
     while (true)
     {
       s32 bytes_read = readFromPipe(m_fd, buf, sizeof buf);
@@ -209,11 +217,14 @@ Core::DeviceRemoval PipeDevice::UpdateInput()
       // TODO: handle real errors
       if (bytes_read <= 0)
         break;
-
+      got_data = true;
       m_buf.append(buf, bytes_read);
     }
 
-    // Execute any commands given to us.
+    // If blocking and no data arrived, the pipe has no client — stop waiting.
+    if (wait_for_input && !got_data)
+      break;
+
     std::size_t newline = m_buf.find("\n");
     while (newline != std::string::npos)
     {
