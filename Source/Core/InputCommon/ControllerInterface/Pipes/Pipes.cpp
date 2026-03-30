@@ -168,14 +168,19 @@ s32 PipeDevice::readFromPipe(PIPE_FD file_descriptor, char* in_buffer, size_t si
 void waitForInput(PIPE_FD file_descriptor)
 {
 #ifdef _WIN32
-  // Not implemented yet.
+  // Wait until data is available on the pipe
+  while (true)
+  {
+    DWORD bytes_available = 0;
+    if (PeekNamedPipe(file_descriptor, NULL, 0, NULL, &bytes_available, NULL) &&
+        bytes_available > 0)
+      break;
+    Sleep(1);  // yield to avoid busy-loop
+  }
 #else
   fd_set set;
   FD_ZERO(&set);
   FD_SET(file_descriptor, &set);
-
-  // Wait for activity on the socket
-  // TODO: we should be using `poll` instead
   select(file_descriptor + 1, &set, NULL, NULL, NULL);
 #endif
 }
