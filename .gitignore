@@ -48,9 +48,29 @@ CMakeLists.txt.user
 # Ignore flatpak-builder's cache dir
 .flatpak-builder
 
-# slippi change
-# Ignore the rust target dir
-Externals/SlippiRustExtensions/target/
-AppDir/
-*.AppImage
-# end slippi change
+
+# Ignore extracted tooling / vendor archives produced by build or packaging
+/Tools/linuxdeploy-extracted/
+/Tools/**/linuxdeploy-*
+
+# Generic build outputs (add any additional build dirs you see in git status)
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Local-only exclude (optional): add to .git/info/exclude instead of committing
+# .git/info/exclude entries (no file edit here — just a note)
+# Tools/linuxdeploy-extracted/
+
+# AppImage build artifacts
+/AppDir/
+/*.AppImage
+
+# Downloaded AppImage tooling
+/Tools/linuxdeploy
+/Tools/linuxdeploy-update-plugin
+/Tools/linuxdeploy-plugin-qt-*.AppImage
+/Tools/appimageupdatetool

@@ -1,9 +1,9 @@
 #!/bin/bash -e
 # build-appimage.sh
 
-BUILD_DIR='./build-bot'
+BUILD_DIR='./build-gui'
 
-NETPLAY_APPIMAGE_STRING="Slippi_Netplay_Mainline_NoGui_BvH-x86_64.AppImage"
+NETPLAY_APPIMAGE_STRING="Slippi_Netplay_Mainline_BvH-x86_64.AppImage"
 PLAYBACK_APPIMAGE_STRING="Slippi_Playback_Mainline-x86_64.AppImage"
 
 LINUXDEPLOY_PATH="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous"
@@ -46,11 +46,16 @@ fi
 chmod +x ./Tools/linuxdeploy
 chmod +x ./Tools/linuxdeploy-update-plugin
 chmod +x ./Tools/appimageupdatetool
+chmod +x "./Tools/${LINUXDEPLOY_QT_PLUGIN_FILE}"
 
 # Extract AppImage tools so they work in environments without FUSE (e.g. WSL2)
 if [ ! -d ./Tools/linuxdeploy-extracted ]; then
 	echo "Extracting linuxdeploy..."
 	cd Tools && ../Tools/linuxdeploy --appimage-extract > /dev/null 2>&1 && mv squashfs-root linuxdeploy-extracted && cd ..
+fi
+if [ ! -d ./Tools/linuxdeploy-qt-plugin-extracted ]; then
+	echo "Extracting linuxdeploy-plugin-qt..."
+	cd Tools && ./${LINUXDEPLOY_QT_PLUGIN_FILE} --appimage-extract > /dev/null 2>&1 && mv squashfs-root linuxdeploy-qt-plugin-extracted && cd ..
 fi
 if [ ! -d ./Tools/linuxdeploy-update-plugin-extracted ]; then
 	echo "Extracting linuxdeploy-update-plugin..."
@@ -60,6 +65,9 @@ fi
 LINUXDEPLOY="./Tools/linuxdeploy-extracted/AppRun"
 LINUXDEPLOY_UPDATE_PLUGIN="./Tools/linuxdeploy-update-plugin-extracted/AppRun"
 
+# Symlink the Qt plugin where linuxdeploy can discover it (looks for "linuxdeploy-plugin-qt" in PATH)
+ln -sf "$(pwd)/Tools/linuxdeploy-qt-plugin-extracted/AppRun" ./Tools/linuxdeploy-extracted/usr/bin/linuxdeploy-plugin-qt
+
 # Delete the AppDir folder to prevent build issues
 rm -rf ./AppDir/
 
@@ -67,12 +75,17 @@ rm -rf ./AppDir/
 mkdir -p ${APPDIR_HOOKS}
 cp Data/linux-env.sh ${APPDIR_HOOKS}
 
+# Ensure qt6 is properly set
+qtchooser -install qt6 $(which qmake6) || true
+export QT_SELECT=qt6
+
 # Build the AppDir directory for this image
 mkdir -p AppDir
 ${LINUXDEPLOY} \
 	--appdir=./AppDir \
 	-e ${BUILD_DIR}/Binaries/dolphin-emu \
-	-d ./Data/slippi-dolphin.desktop || true
+	-d ./Data/slippi-dolphin.desktop \
+	--plugin qt || true
 
 # Manually deploy the icon since linuxdeploy fails to resolve it
 mkdir -p ./AppDir/usr/share/icons/hicolor/256x256/apps/
