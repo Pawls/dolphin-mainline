@@ -22,6 +22,13 @@ if (POLICY CMP0141)
   cmake_policy(SET CMP0141 NEW) # MSVC debug information format flags are selected by an abstraction.
 endif()
 
+# CMake 4.0 removed compatibility with cmake_minimum_required < 3.5. Several
+# vendored Externals (libspng, tinygltf examples, cubeb's sanitizers-cmake)
+# still declare 2.8/3.0/3.2 minimums upstream. Force-bump their effective
+# minimum so users don't have to hand-edit submodule CMakeLists.txt files
+# after `git submodule update --init --recursive`.
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "" FORCE)
+
 # Minimum OS X version.
 # This is inserted into the Info.plist as well.
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0.0" CACHE STRING "")
