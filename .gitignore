@@ -74,3 +74,6 @@ Makefile
 /Tools/linuxdeploy-update-plugin
 /Tools/linuxdeploy-plugin-qt-*.AppImage
 /Tools/appimageupdatetool
+
+# Claude Code per-user local state (permission approvals, local overrides)
+.claude/settings.local.json
