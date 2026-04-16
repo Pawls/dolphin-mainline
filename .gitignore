@@ -54,3 +54,15 @@ Externals/SlippiRustExtensions/target/
 AppDir/
 *.AppImage
 # end slippi change
+
+# Downloaded AppImage tooling
+/Tools/linuxdeploy
+/Tools/linuxdeploy-update-plugin
+/Tools/linuxdeploy-plugin-qt-*.AppImage
+/Tools/appimageupdatetool
+/Tools/linuxdeploy-extracted/
+/Tools/linuxdeploy-qt-plugin-extracted/
+/Tools/linuxdeploy-update-plugin-extracted/
+
+# Claude Code per-user local state
+.claude/settings.local.json
