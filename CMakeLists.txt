@@ -29,6 +29,31 @@ endif()
 # after `git submodule update --init --recursive`.
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "" FORCE)
 
+# MSVC 17.10 (VS 2022 17.10+, VS 2026) removed the stdext:: array-iterator
+# namespace. Qt 6.5.1 still uses stdext::make_checked_array_iterator in
+# QtCore/qcompilerdetection.h; Qt 6.5.3+ replaced these with passthrough.
+# Since our bundled Qt submodule is pinned to 6.5.1, patch the header at
+# configure time. Idempotent: skipped once the stdext:: calls are gone.
+if(MSVC)
+  set(_qt_detect_header
+      "${CMAKE_CURRENT_SOURCE_DIR}/Externals/Qt/Qt6.5.1/x64/include/QtCore/qcompilerdetection.h")
+  if(EXISTS "${_qt_detect_header}")
+    file(READ "${_qt_detect_header}" _qt_detect_content)
+    if(_qt_detect_content MATCHES "stdext::make_checked_array_iterator")
+      string(REPLACE
+        "#  define QT_MAKE_UNCHECKED_ARRAY_ITERATOR(x) stdext::make_unchecked_array_iterator(x) // Since _MSC_VER >= 1800"
+        "#  define QT_MAKE_UNCHECKED_ARRAY_ITERATOR(x) (x) // patched: stdext removed in MSVC 17.10+ (Qt 6.5.3+ did the same)"
+        _qt_detect_content "${_qt_detect_content}")
+      string(REPLACE
+        "#  define QT_MAKE_CHECKED_ARRAY_ITERATOR(x, N) stdext::make_checked_array_iterator(x, size_t(N)) // Since _MSC_VER >= 1500"
+        "#  define QT_MAKE_CHECKED_ARRAY_ITERATOR(x, N) (x) // patched: stdext removed in MSVC 17.10+ (Qt 6.5.3+ did the same)"
+        _qt_detect_content "${_qt_detect_content}")
+      file(WRITE "${_qt_detect_header}" "${_qt_detect_content}")
+      message(STATUS "Patched bundled Qt 6.5.1 qcompilerdetection.h for MSVC 17.10+ stdext removal")
+    endif()
+  endif()
+endif()
+
 # Minimum OS X version.
 # This is inserted into the Info.plist as well.
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0.0" CACHE STRING "")
