@@ -285,6 +285,7 @@ add_executable(dolphin-emu
   MainWindow.h
   MenuBar.cpp
   MenuBar.h
+  NoGuiStubs.cpp
   NetPlay/ChunkedProgressDialog.cpp
   NetPlay/ChunkedProgressDialog.h
   NetPlay/GameDigestDialog.cpp
